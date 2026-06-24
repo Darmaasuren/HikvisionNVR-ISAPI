@@ -2,5 +2,7 @@
 .dockerignore
 .venv
 test
-__pycache__
+__pycache__/
+*.py[cod]
+.pytest_cache/
 *.pyc
