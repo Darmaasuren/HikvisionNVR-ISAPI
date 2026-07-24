@@ -1,9 +1,7 @@
 services:
   hikvision-nvr:
-    build: .
+    image: hikvision-nvr:gateway
     container_name: hikvision-nvr
-    env_file:
-      - .env
     ports:
-      - "8000:8000"
+      - "8001:8000"
     restart: unless-stopped

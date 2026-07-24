@@ -3,7 +3,7 @@ from urllib.parse import urlsplit, urlunsplit
 from gateway.config import NvrConfig
 from gateway.http import HikvisionHttpClient
 from gateway.services.cameras import CameraService
-from gateway.xml_utils import child_text, local_name
+from gateway.xml_utils import child_text, find_text, local_name
 
 
 #get live stream 
@@ -52,6 +52,7 @@ class StreamService:
 
         track_id = camera["main_track_id"] if stream_type == "main" else camera["sub_track_id"]
 
+        #user track id(camera id /main , sub/) to build rtsp url
         return self.build_rtsp_url_by_track_id(
             track_id,
             include_password=include_password,
@@ -69,16 +70,18 @@ class StreamService:
                 continue
 
             channel_id = child_text(channel, "id")
+            width = find_text(channel, "videoResolutionWidth")
+            height = find_text(channel, "videoResolutionHeight")
+            resolution = f"{width}x{height}" if width and height else ""
+
             channels.append({
                 "id": channel_id,
                 "name": child_text(channel, "channelName"),
                 "enabled": child_text(channel, "enabled"),
-                "transport_protocol": child_text(channel, "transportProtocol"),
-                "video_codec": child_text(channel, "videoCodecType"),
-                "resolution": (
-                    f"{child_text(channel, 'videoResolutionWidth')}"
-                    f"{child_text(channel, 'videoResolutionHeight')}"
-                ),
+                "transport_protocol": find_text(channel, "transportProtocol"),
+                "video_codec": find_text(channel, "videoCodecType"),
+                "resolution": resolution,
+                #use channel id to build rtsp url
                 "rtsp_url": self.build_rtsp_url_by_track_id(
                     channel_id,
                     include_password=False,

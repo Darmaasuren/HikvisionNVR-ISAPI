@@ -3,7 +3,14 @@ import os
 
 from dotenv import load_dotenv
 
+from gateway.database import get_active_nvr_config
+
 load_dotenv()
+
+
+class ConfigNotConfiguredError(RuntimeError):
+    pass
+
 
 #Get config NVR
 @dataclass(frozen=True)
@@ -21,19 +28,15 @@ class NvrConfig:
 
 
 def load_config() -> NvrConfig:
-    config = NvrConfig(
-        nvr_ip=os.getenv("NVR_IP", "").strip(),
-        nvr_username=(os.getenv("NVR_USERNAME") or "admin").strip(),
-        nvr_password=(os.getenv("NVR_PASSWORD") or "").strip(),
-        nvr_http_port=int(os.getenv("NVR_HTTP_PORT") or "80"),
-        nvr_rtsp_port=int(os.getenv("NVR_RTSP_PORT") or "554"),
-        request_timeout_seconds=float(os.getenv("NVR_REQUEST_TIMEOUT_SECONDS") or "10.0"),
-    )
+    stored_config = get_active_nvr_config()
+    if stored_config is not None:
+        return NvrConfig(
+            nvr_ip=stored_config.ip_address,
+            nvr_username=stored_config.username,
+            nvr_password=stored_config.password,
+            nvr_http_port=stored_config.http_port,
+            nvr_rtsp_port=stored_config.rtsp_port,
+            request_timeout_seconds=float(os.getenv("NVR_REQUEST_TIMEOUT_SECONDS") or "10.0"),
+        )
 
-    if not config.nvr_ip:
-        raise RuntimeError("Missing required environment variable: NVR_IP")
-
-    # if not config.nvr_password:
-    #     raise RuntimeError("Missing required environment variable: NVR_PASSWORD")
-
-    return config
+    raise ConfigNotConfiguredError("NVR config is not configured")

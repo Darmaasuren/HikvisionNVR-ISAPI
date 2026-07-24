@@ -24,7 +24,7 @@ class HikvisionHttpClient:
             read=1,
             backoff_factor=0.3,
             status_forcelist=(502, 503, 504),
-            allowed_methods=frozenset({"GET", "POST"}),
+            allowed_methods=frozenset({"GET", "POST", "PUT"}),
             raise_on_status=False,
         )
         adapter = HTTPAdapter(max_retries=retry)
@@ -78,6 +78,27 @@ class HikvisionHttpClient:
             )
         except requests.RequestException as exc:
             raise HikvisionError(f"Hikvision POST failed: {path}", endpoint=path) from exc
+
+        self._raise_for_bad_response(response, path)
+        return response
+
+    def put_xml(
+        self,
+        path: str,
+        body: str,
+        *,
+        timeout: float | None = None,
+    ) -> Response:
+        try:
+            response = self.session.put(
+                self.url(path),
+                data=body.encode("utf-8"),
+                headers={"Content-Type": "application/xml"},
+                auth=self.auth,
+                timeout=timeout or self.config.request_timeout_seconds,
+            )
+        except requests.RequestException as exc:
+            raise HikvisionError(f"Hikvision PUT failed: {path}", endpoint=path) from exc
 
         self._raise_for_bad_response(response, path)
         return response

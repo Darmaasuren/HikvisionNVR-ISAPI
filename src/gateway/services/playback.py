@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from typing import Any
 from xml.sax.saxutils import escape
 import uuid
@@ -6,8 +6,6 @@ import uuid
 from gateway.http import HikvisionHttpClient
 from gateway.services.cameras import CameraService
 from gateway.xml_utils import find_text, local_name
-
-MONGOLIA_TZ = timezone(timedelta(hours=8))
 
 
 class PlaybackService:
@@ -17,7 +15,10 @@ class PlaybackService:
 
     def hikvision_time(self, value: datetime) -> str:
         if value.tzinfo is None:
-            value = value.replace(tzinfo=MONGOLIA_TZ)
+            value = value.replace(tzinfo=timezone.utc)
+        else:
+            value = value.astimezone(timezone.utc)
+
         return value.isoformat()
 
     #use start and end time between search video
