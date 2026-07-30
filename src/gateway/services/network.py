@@ -83,6 +83,18 @@ class NetworkService:
         addressing_type: str = "static",
         ip_version: str = "v4",
     ) -> dict[str, str]:
+        if addressing_type != "static":
+            body = f"""<?xml version="1.0" encoding="UTF-8"?>
+<IPAddress version="2.0" xmlns="http://www.isapi.org/ver20/XMLSchema">
+    <ipVersion>{escape(ip_version)}</ipVersion>
+    <addressingType>{escape(addressing_type)}</addressingType>
+</IPAddress>
+"""
+            endpoint = f"/ISAPI/System/Network/interfaces/{interface_id}/ipAddress"
+            response = self.http.put_xml(endpoint, body)
+            root = self.http.parse_xml(response, endpoint)
+            return self._parse_response_status(root)
+
         secondary_dns_xml = ""
         if secondary_dns:
             secondary_dns_xml = f"""

@@ -1,11 +1,6 @@
 from dataclasses import dataclass
-import os
-
-from dotenv import load_dotenv
 
 from gateway.database import get_active_nvr_config
-
-load_dotenv()
 
 
 class ConfigNotConfiguredError(RuntimeError):
@@ -24,7 +19,8 @@ class NvrConfig:
 
     @property
     def nvr_base_url(self) -> str:
-        return f"http://{self.nvr_ip}:{self.nvr_http_port}"
+        host = f"[{self.nvr_ip}]" if ":" in self.nvr_ip else self.nvr_ip
+        return f"http://{host}:{self.nvr_http_port}"
 
 
 def load_config() -> NvrConfig:
@@ -36,7 +32,7 @@ def load_config() -> NvrConfig:
             nvr_password=stored_config.password,
             nvr_http_port=stored_config.http_port,
             nvr_rtsp_port=stored_config.rtsp_port,
-            request_timeout_seconds=float(os.getenv("NVR_REQUEST_TIMEOUT_SECONDS") or "10.0"),
+            request_timeout_seconds=10.0,
         )
 
     raise ConfigNotConfiguredError("NVR config is not configured")

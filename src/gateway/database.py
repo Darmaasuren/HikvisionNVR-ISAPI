@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime, timezone
-import os
 from pathlib import Path
 import sqlite3
 from typing import Any
@@ -26,7 +25,7 @@ class StoredNvrConfig:
 
 
 def get_database_path() -> Path:
-    return Path(os.getenv("HIKVISION_DB_PATH") or DEFAULT_DB_PATH)
+    return DEFAULT_DB_PATH
 
 
 def _connect() -> sqlite3.Connection:

@@ -25,9 +25,14 @@ class StreamService:
         include_password: bool = False,
     ) -> str:
         password = self.config.nvr_password if include_password else "<password>"
+        host = (
+            f"[{self.config.nvr_ip}]"
+            if ":" in self.config.nvr_ip
+            else self.config.nvr_ip
+        )
         return (
             f"rtsp://{self.config.nvr_username}:{password}"
-            f"@{self.config.nvr_ip}:{self.config.nvr_rtsp_port}"
+            f"@{host}:{self.config.nvr_rtsp_port}"
             f"/Streaming/channels/{track_id}"
         )
 
