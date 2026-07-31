@@ -1,6 +1,8 @@
+from typing import Any
+
 from pydantic import BaseModel
 
 
 class ApiResponse(BaseModel):
-    ok: bool = True
-    data: object | None = None
+    success: bool = True
+    messages: dict[str, Any]

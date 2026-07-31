@@ -13,7 +13,6 @@ class SetupService:
         password: str,
         http_port: int = 80,
         rtsp_port: int = 554,
-        request_timeout_seconds: float = 10.0,
     ) -> StoredNvrConfig:
         config = NvrConfig(
             nvr_ip=ip_address,
@@ -21,7 +20,6 @@ class SetupService:
             nvr_password=password,
             nvr_http_port=http_port,
             nvr_rtsp_port=rtsp_port,
-            request_timeout_seconds=request_timeout_seconds,
         )
         device_info = DeviceService(HikvisionHttpClient(config)).get_info()
 

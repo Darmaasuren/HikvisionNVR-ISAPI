@@ -2,6 +2,7 @@ from fastapi import APIRouter, Body, Depends, HTTPException
 
 from app.dependencies import get_client, get_config
 from app.exception_handlers import handle_hikvision_error
+from app.responses import success_response
 from app.schemas import NetworkAddressRequest
 from gateway.client import HikvisionClient
 from gateway.config import NvrConfig
@@ -20,14 +21,20 @@ def get_interface_ip_config(client: HikvisionClient, interface_id: str) -> dict:
     if interface is None:
         raise HTTPException(
             status_code=404,
-            detail=f"Network interface {interface_id} was not found",
+            detail={
+                "code": "NETWORK_INTERFACE_NOT_FOUND",
+                "message": f"Network interface {interface_id} was not found",
+            },
         )
 
     ip_config = interface.get("ip_address") or {}
     if not ip_config:
         raise HTTPException(
             status_code=404,
-            detail=f"Network interface {interface_id} has no IP configuration",
+            detail={
+                "code": "NETWORK_IP_CONFIG_NOT_FOUND",
+                "message": f"Network interface {interface_id} has no IP configuration",
+            },
         )
     return ip_config
 
@@ -35,7 +42,12 @@ def get_interface_ip_config(client: HikvisionClient, interface_id: str) -> dict:
 @router.get("/interfaces")
 def network_interfaces(client: HikvisionClient = Depends(get_client)) -> dict:
     try:
-        return {"ok": True, "data": client.get_network_interfaces()}
+        items = client.get_network_interfaces()
+        return success_response(
+            "Network interfaces retrieved successfully",
+            result=items,
+            count=len(items),
+        )
     except HikvisionError as exc:
         raise handle_hikvision_error(exc) from exc
 
@@ -79,6 +91,7 @@ def set_network_interface_ip_address(
                 raise HTTPException(
                     status_code=400,
                     detail={
+                        "code": "MISSING_STATIC_NETWORK_VALUES",
                         "message": "Missing required static network values",
                         "missing_fields": missing_fields,
                     },
@@ -100,6 +113,9 @@ def set_network_interface_ip_address(
                     http_port=config.nvr_http_port,
                     rtsp_port=config.nvr_rtsp_port,
                 )
-        return {"ok": True, "data": data}
+        return success_response(
+            "Network configuration updated successfully",
+            result=data,
+        )
     except HikvisionError as exc:
         raise handle_hikvision_error(exc) from exc

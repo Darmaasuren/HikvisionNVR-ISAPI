@@ -1,7 +1,7 @@
 from pathlib import Path
 from xml.sax.saxutils import escape
 
-from gateway.config import NvrConfig
+from gateway.config import DOWNLOAD_TIMEOUT_SECONDS, NvrConfig
 from gateway.http import HikvisionHttpClient
 
 
@@ -18,12 +18,16 @@ class DownloadService:
 </downloadRequest>
 """
 
+        endpoint = "/ISAPI/ContentMgmt/download"
         response = self.http.post_xml(
-            "/ISAPI/ContentMgmt/download",
+            endpoint,
             body,
-            timeout=120,
+            timeout=DOWNLOAD_TIMEOUT_SECONDS,
             stream=True,
         )
+        content_type = response.headers.get("Content-Type", "").lower()
+        if "xml" in content_type:
+            self.http.parse_xml(response, endpoint)
 
         path = Path(output_path)
         path.parent.mkdir(parents=True, exist_ok=True)

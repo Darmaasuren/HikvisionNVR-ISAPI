@@ -22,18 +22,27 @@ def require_api_key(
     if not expected_key:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="API authentication is not configured",
+            detail={
+                "code": "API_AUTH_NOT_CONFIGURED",
+                "message": "API authentication is not configured",
+            },
         )
 
     if provided_key is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="API key is required",
+            detail={
+                "code": "API_KEY_REQUIRED",
+                "message": "API key is required",
+            },
             headers={"WWW-Authenticate": "ApiKey"},
         )
 
     if not secrets.compare_digest(provided_key, expected_key):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Invalid API key",
+            detail={
+                "code": "INVALID_API_KEY",
+                "message": "Invalid API key",
+            },
         )

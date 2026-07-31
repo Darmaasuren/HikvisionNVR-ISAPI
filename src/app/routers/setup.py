@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from app.dependencies import get_client
 from app.exception_handlers import handle_hikvision_error
+from app.responses import success_response
 from app.schemas import NvrSetupRequest
 from gateway.client import HikvisionClient
 from gateway.config import load_config
@@ -16,14 +17,14 @@ router = APIRouter()
 def setup_status() -> dict:
     stored_config = get_active_nvr_config()
     if stored_config is None:
-        return {
-            "ok": True,
-            "data": {
+        return success_response(
+            "NVR setup is required",
+            result={
                 "configured": False,
                 "source": "database",
                 "setup_required": True,
             },
-        }
+        )
 
     reachable = True
     error = ""
@@ -33,16 +34,16 @@ def setup_status() -> dict:
         reachable = False
         error = str(exc)
 
-    return {
-        "ok": True,
-        "data": {
+    return success_response(
+        "NVR status retrieved successfully",
+        result={
             "configured": True,
             "source": "database",
             "reachable": reachable,
             "error": error,
             "config": public_config(stored_config),
         },
-    }
+    )
 
 
 def _test_and_save(request: NvrSetupRequest) -> dict:
@@ -54,7 +55,10 @@ def _test_and_save(request: NvrSetupRequest) -> dict:
             http_port=request.http_port,
             rtsp_port=request.rtsp_port,
         )
-        return {"ok": True, "data": public_config(stored_config)}
+        return success_response(
+            "NVR configuration saved successfully",
+            result=public_config(stored_config),
+        )
     except HikvisionError as exc:
         raise handle_hikvision_error(exc) from exc
 
@@ -71,12 +75,15 @@ def nvr_config() -> dict:
         raise HTTPException(
             status_code=404,
             detail={
+                "code": "NVR_CONFIG_NOT_FOUND",
                 "message": "NVR config is not saved in database",
-                "setup_required": True,
             },
         )
 
-    return {"ok": True, "data": public_config(stored_config)}
+    return success_response(
+        "NVR configuration retrieved successfully",
+        result=public_config(stored_config),
+    )
 
 
 @router.put("/nvr/config/update")
@@ -87,6 +94,9 @@ def update_nvr_config(request: NvrSetupRequest) -> dict:
 @router.get("/nvr/info")
 def nvr_info(client: HikvisionClient = Depends(get_client)) -> dict:
     try:
-        return {"ok": True, "data": client.get_device_info()}
+        return success_response(
+            "NVR information retrieved successfully",
+            result=client.get_device_info(),
+        )
     except HikvisionError as exc:
         raise handle_hikvision_error(exc) from exc

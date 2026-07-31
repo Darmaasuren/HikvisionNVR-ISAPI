@@ -131,8 +131,13 @@ curl http://localhost:8001/health
 
 ```json
 {
-  "ok": true,
-  "service": "hikvision-gateway"
+  "success": true,
+  "messages": {
+    "message": "Service is healthy",
+    "result": {
+      "service": "hikvision-gateway"
+    }
+  }
 }
 ```
 
@@ -177,11 +182,14 @@ curl \
 
 ```json
 {
-  "ok": true,
-  "data": {
-    "configured": false,
-    "source": "database",
-    "setup_required": true
+  "success": true,
+  "messages": {
+    "message": "NVR setup is required",
+    "result": {
+      "configured": false,
+      "source": "database",
+      "setup_required": true
+    }
   }
 }
 ```
@@ -361,8 +369,12 @@ data/hikvision_gateway.sqlite3
 Collection:
 
 ```text
-postman/Hikvision_Gateway.postman_collection.json
+postman/Hikvision_Gateway_With_Examples.postman_collection.json
 ```
+
+Collection нь 14 request, 45 response example агуулна. Request-ийн доорх example-ийг
+сонгож success, validation, authentication, NVR connection болон timeout
+response-уудыг харж болно.
 
 Postman variables:
 

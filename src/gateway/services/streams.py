@@ -1,9 +1,10 @@
 from urllib.parse import urlsplit, urlunsplit
+from typing import Any
 
 from gateway.config import NvrConfig
 from gateway.http import HikvisionHttpClient
 from gateway.services.cameras import CameraService
-from gateway.xml_utils import child_text, find_text, local_name
+from gateway.xml_utils import child_text, find_text, local_name, to_bool
 
 
 #get live stream 
@@ -63,7 +64,7 @@ class StreamService:
             include_password=include_password,
         )
 
-    def list_channels(self) -> list[dict[str, str]]:
+    def list_channels(self) -> list[dict[str, Any]]:
         endpoint = "/ISAPI/Streaming/channels"
         response = self.http.get(endpoint)
         root = self.http.parse_xml(response, endpoint)
@@ -82,7 +83,7 @@ class StreamService:
             channels.append({
                 "id": channel_id,
                 "name": child_text(channel, "channelName"),
-                "enabled": child_text(channel, "enabled"),
+                "enabled": to_bool(child_text(channel, "enabled")),
                 "transport_protocol": find_text(channel, "transportProtocol"),
                 "video_codec": find_text(channel, "videoCodecType"),
                 "resolution": resolution,

@@ -29,10 +29,10 @@ class HikvisionClient:
     def get_device_info(self) -> dict[str, str]:
         return self.device.get_info()
 
-    def get_cameras(self) -> list[dict[str, str]]:
+    def get_cameras(self) -> list[dict[str, Any]]:
         return self.cameras.list()
 
-    def get_streaming_channels(self) -> list[dict[str, str]]:
+    def get_streaming_channels(self) -> list[dict[str, Any]]:
         return self.streams.list_channels()
 
     def build_live_rtsp_url(
@@ -87,7 +87,7 @@ class HikvisionClient:
         secondary_dns: str = "",
         addressing_type: str = "static",
         ip_version: str = "v4",
-    ) -> dict[str, str]:
+    ) -> dict[str, Any]:
         return self.network.set_ip_address(
             interface_id,
             ip_address=ip_address,

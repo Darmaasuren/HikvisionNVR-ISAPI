@@ -6,6 +6,7 @@ from fastapi.responses import FileResponse
 
 from app.dependencies import get_client
 from app.exception_handlers import handle_hikvision_error
+from app.responses import success_response
 from app.schemas import DownloadRequest
 from gateway.client import HikvisionClient
 from gateway.errors import HikvisionError
@@ -32,9 +33,18 @@ def playback_search(
             max_results=max_results,
             position=position,
         )
-        return {"ok": True, "data": data}
+        return success_response(
+            "Playback search completed successfully",
+            result=data,
+        )
     except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "code": "INVALID_PLAYBACK_REQUEST",
+                "message": str(exc),
+            },
+        ) from exc
     except HikvisionError as exc:
         raise handle_hikvision_error(exc) from exc
 

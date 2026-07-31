@@ -11,6 +11,7 @@ def get_config() -> NvrConfig:
         raise HTTPException(
             status_code=428,
             detail={
+                "code": "NVR_NOT_CONFIGURED",
                 "message": str(exc),
                 "setup_required": True,
             },

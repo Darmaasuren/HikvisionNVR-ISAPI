@@ -2,6 +2,9 @@ from dataclasses import dataclass
 
 from gateway.database import get_active_nvr_config
 
+REQUEST_TIMEOUT_SECONDS = 5.0
+DOWNLOAD_TIMEOUT_SECONDS = 300.0
+
 
 class ConfigNotConfiguredError(RuntimeError):
     pass
@@ -15,7 +18,7 @@ class NvrConfig:
     nvr_password: str
     nvr_http_port: int = 80
     nvr_rtsp_port: int = 554
-    request_timeout_seconds: float = 10.0
+    request_timeout_seconds: float = REQUEST_TIMEOUT_SECONDS
 
     @property
     def nvr_base_url(self) -> str:
@@ -32,7 +35,6 @@ def load_config() -> NvrConfig:
             nvr_password=stored_config.password,
             nvr_http_port=stored_config.http_port,
             nvr_rtsp_port=stored_config.rtsp_port,
-            request_timeout_seconds=10.0,
         )
 
     raise ConfigNotConfiguredError("NVR config is not configured")

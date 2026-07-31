@@ -1,5 +1,7 @@
+from typing import Any
+
 from gateway.http import HikvisionHttpClient
-from gateway.xml_utils import child_text, find_child, local_name
+from gateway.xml_utils import child_text, find_child, local_name, to_int
 
 
 #get cameras list in NVR
@@ -14,7 +16,7 @@ class CameraService:
         suffix = "01" if stream_type == "main" else "02"
         return f"{camera_id}{suffix}"
 
-    def list(self) -> list[dict[str, str]]:
+    def list(self) -> list[dict[str, Any]]:
         endpoint = "/ISAPI/ContentMgmt/InputProxy/channels"
         response = self.http.get(endpoint)
         root = self.http.parse_xml(response, endpoint)
@@ -31,11 +33,11 @@ class CameraService:
             camera = {
                 "id": camera_id,
                 "name": child_text(channel, "name"),
-                "dev_index": child_text(channel, "devIndex"),
+                "dev_index": to_int(child_text(channel, "devIndex")),
                 "main_track_id": self.build_track_id(camera_id, "main"),
                 "sub_track_id": self.build_track_id(camera_id, "sub"),
                 "ip_address": "",
-                "manage_port": "",
+                "manage_port": None,
                 "protocol": "",
                 "username": "",
                 "model": "",
@@ -46,7 +48,7 @@ class CameraService:
             if source is not None:
                 camera.update({
                     "ip_address": child_text(source, "ipAddress"),
-                    "manage_port": child_text(source, "managePortNo"),
+                    "manage_port": to_int(child_text(source, "managePortNo")),
                     "protocol": child_text(source, "proxyProtocol"),
                     "username": child_text(source, "userName"),
                     "model": child_text(source, "model"),

@@ -2,7 +2,7 @@ from typing import Any
 from xml.sax.saxutils import escape
 
 from gateway.http import HikvisionHttpClient
-from gateway.xml_utils import child_text, find_child, local_name
+from gateway.xml_utils import child_text, find_child, local_name, to_bool, to_int
 
 
 # get and update NVR network interface configuration
@@ -25,14 +25,6 @@ class NetworkService:
             "secondary_dns": child_text(secondary_dns, "ipAddress") if secondary_dns is not None else "",
         }
 
-    def _parse_response_status(self, root) -> dict[str, str]:
-        return {
-            "request_url": child_text(root, "requestURL"),
-            "status_code": child_text(root, "statusCode"),
-            "status_string": child_text(root, "statusString"),
-            "sub_status_code": child_text(root, "subStatusCode"),
-        }
-
     def list_interfaces(self) -> list[dict[str, Any]]:
         endpoint = "/ISAPI/System/Network/interfaces"
         response = self.http.get(endpoint)
@@ -50,7 +42,9 @@ class NetworkService:
             item = {
                 "id": child_text(interface, "id"),
                 "mac_address": child_text(interface, "macAddress"),
-                "default_connection": child_text(interface, "defaultConnection"),
+                "default_connection": to_bool(
+                    child_text(interface, "defaultConnection")
+                ),
                 "ip_address": {},
                 "link": {},
             }
@@ -61,10 +55,12 @@ class NetworkService:
             if link_node is not None:
                 item["link"] = {
                     "mac_address": child_text(link_node, "MACAddress"),
-                    "auto_negotiation": child_text(link_node, "autoNegotiation"),
-                    "speed": child_text(link_node, "speed"),
+                    "auto_negotiation": to_bool(
+                        child_text(link_node, "autoNegotiation")
+                    ),
+                    "speed": to_int(child_text(link_node, "speed")),
                     "duplex": child_text(link_node, "duplex"),
-                    "mtu": child_text(link_node, "MTU"),
+                    "mtu": to_int(child_text(link_node, "MTU")),
                 }
 
             interfaces.append(item)
@@ -82,7 +78,7 @@ class NetworkService:
         secondary_dns: str = "",
         addressing_type: str = "static",
         ip_version: str = "v4",
-    ) -> dict[str, str]:
+    ) -> dict[str, Any]:
         if addressing_type != "static":
             body = f"""<?xml version="1.0" encoding="UTF-8"?>
 <IPAddress version="2.0" xmlns="http://www.isapi.org/ver20/XMLSchema">
@@ -92,8 +88,14 @@ class NetworkService:
 """
             endpoint = f"/ISAPI/System/Network/interfaces/{interface_id}/ipAddress"
             response = self.http.put_xml(endpoint, body)
-            root = self.http.parse_xml(response, endpoint)
-            return self._parse_response_status(root)
+            self.http.parse_xml(response, endpoint)
+            return {
+                "interface_id": str(interface_id),
+                "addressing_type": addressing_type,
+                "ip_version": ip_version,
+                "ip_address": "",
+                "reboot_required": False,
+            }
 
         secondary_dns_xml = ""
         if secondary_dns:
@@ -119,5 +121,11 @@ class NetworkService:
 
         endpoint = f"/ISAPI/System/Network/interfaces/{interface_id}/ipAddress"
         response = self.http.put_xml(endpoint, body)
-        root = self.http.parse_xml(response, endpoint)
-        return self._parse_response_status(root)
+        self.http.parse_xml(response, endpoint)
+        return {
+            "interface_id": str(interface_id),
+            "addressing_type": addressing_type,
+            "ip_version": ip_version,
+            "ip_address": ip_address,
+            "reboot_required": False,
+        }

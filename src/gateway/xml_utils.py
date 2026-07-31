@@ -24,3 +24,19 @@ def find_child(parent: ET.Element, child_name: str) -> ET.Element | None:
         if local_name(child.tag) == child_name:
             return child
     return None
+
+
+def to_bool(value: str) -> bool | None:
+    normalized = value.strip().lower()
+    if normalized in {"true", "1", "yes"}:
+        return True
+    if normalized in {"false", "0", "no"}:
+        return False
+    return None
+
+
+def to_int(value: str) -> int | None:
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return None

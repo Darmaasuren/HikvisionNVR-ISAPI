@@ -1,5 +1,12 @@
 from fastapi import Depends, FastAPI
+from fastapi.exceptions import RequestValidationError
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
+from app.exception_handlers import (
+    http_exception_handler,
+    unhandled_exception_handler,
+    validation_exception_handler,
+)
 from app.routers import cameras, health, network, playback, setup, storage, streams
 from app.security import require_api_key
 
@@ -11,6 +18,16 @@ def create_app() -> FastAPI:
         docs_url="/docs",
         redoc_url=None,
     )
+    application.add_exception_handler(
+        StarletteHTTPException,
+        http_exception_handler,
+    )
+    application.add_exception_handler(
+        RequestValidationError,
+        validation_exception_handler,
+    )
+    application.add_exception_handler(Exception, unhandled_exception_handler)
+
     application.include_router(health.router)
 
     protected = [Depends(require_api_key)]
